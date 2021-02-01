@@ -44,10 +44,16 @@
 
     print(a)  # Отправляем ввод пользователя ему же
 
+### Ты можешь изменить поведение `input`, поставив `listen_only_first_user` на `False`. Теперь оно будет ловить все сообщения от любых юзеров как ввод:
+
+    start("твой-вк-токен-от-группы", listen_only_first_user=False)
+
+    # Еще тебе не придется писать '/start', чтобы запустить бота
+
 ### Если ты хочешь выключить сообщения в твоей консоли, то передай аргумент `console_messages_enabled` в `start`, выставив его значение на `False`:
 
-    start("your-group-vk-token", console_messages_enabled=False)
+    start("твой-вк-токен-от-группы", console_messages_enabled=False)
 
 ### Еще ты можешь указывать язык сообщений в консоли:
 
-    start("your-group-vk-token", language="eng")  # Или language="ru"
+    start("твой-вк-токен-от-группы", language="eng")  # Или language="ru"

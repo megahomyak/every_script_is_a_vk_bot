@@ -44,6 +44,12 @@ This library can turn your code into the VK bot.
 
     print(a)  # Sending user's input as an output
 
+### You can change `input`'s behavior by setting `listen_only_first_user` to `False`. Now it will catch any messages from any user as an input:
+
+    start("your-group-vk-token", listen_only_first_user=False)
+
+    # Also it will disable the need to write '/start' to start the bot
+
 ### If you want to disable messages in your console, you need to pass a `console_messages_enabled` argument to `start`, setting this argument to `False`:
 
     start("your-group-vk-token", console_messages_enabled=False)

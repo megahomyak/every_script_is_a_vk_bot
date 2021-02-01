@@ -4,7 +4,7 @@ from typing import Optional, Generator, Any
 import saya
 
 _YOU_NEED_TO_START_THE_BOT_MSG = (
-    "Сначала вызови start() | You need to start() the bot at first"
+    "Сначала вызови start()", "You need to start() the bot at first"
 )
 
 _vk_client: Optional[saya.Vk] = None
@@ -13,6 +13,7 @@ _current_peer_id = None
 _is_user = None
 _console_messages_enabled: bool = True
 _preferred_language_is_russian = None
+_listen_only_first_user = True
 
 
 def _translated_print(ru_text: str, eng_text: str) -> None:
@@ -50,17 +51,11 @@ def start(
         phone_number: Optional[int] = None,
         password: Optional[str] = None,
         console_messages_enabled: bool = True,
-        language: Optional[str] = None) -> None:
-    assert (
-        token is not None
-        or (phone_number is not None and password is not None)
-    ), (
-        "Тебе нужен хотя бы токен (token) или телефонный номер (phone_number) "
-        "с паролем (password), чтобы запустить бота | You need at least token "
-        "or phone_number with password to start the bot"
-    )
+        language: Optional[str] = None,
+        listen_only_first_user: bool = True) -> None:
     global _vk_client, _is_user, _current_user_id, _current_peer_id
     global _console_messages_enabled, _preferred_language_is_russian
+    global _listen_only_first_user
     if language is not None:
         if language == "ru":
             _preferred_language_is_russian = True
@@ -68,28 +63,46 @@ def start(
             _preferred_language_is_russian = False
         else:
             raise ValueError("language is not equals to ru or eng")
+    assert (
+        token is not None
+        or (phone_number is not None and password is not None)
+    ), _translated_print(
+        "Тебе нужен хотя бы токен (token) или телефонный номер (phone_number) "
+        "с паролем (password), чтобы запустить бота", "You need at least token "
+        "or phone_number with password to start the bot"
+    )
     _vk_client = saya.Vk(
         token=token, group_id=group_id, login=phone_number, password=password
     )
     _console_messages_enabled = console_messages_enabled
-    _translated_print(
-        'Ожидаю сообщения "/старт"', 'Waiting for the "/start" message'
-    )
+    _listen_only_first_user = listen_only_first_user
     _is_user = not group_id
-    for event in _listen_for_messages():
-        text = _get_text_from_message(event)
-        if text.lower() in ("/старт", "/start"):
-            _translated_print(
-                'Сообщение "/старт" получено, продолжаю выполнение скрипта',
-                'The message "/start" was received, continuing script execution'
-            )
-            _current_user_id = _get_from_id_from_message(event)
-            _current_peer_id = _get_peer_id_from_message(event)
-            return
+    if _listen_only_first_user:
+        _translated_print(
+            'Ожидаю сообщения "/старт"', 'Waiting for the "/start" message'
+        )
+        for event in _listen_for_messages():
+            text = _get_text_from_message(event)
+            if text.lower() in ("/старт", "/start"):
+                _translated_print(
+                    'Сообщение "/старт" получено, продолжаю выполнение скрипта',
+                    'The message "/start" was received, continuing script '
+                    'execution'
+                )
+                _current_user_id = _get_from_id_from_message(event)
+                _current_peer_id = _get_peer_id_from_message(event)
+                return
 
 
 def print_(*values: Any, sep: Optional[str] = None) -> None:
-    assert _vk_client is not None, _YOU_NEED_TO_START_THE_BOT_MSG
+    assert _vk_client is not None, _translated_print(
+        *_YOU_NEED_TO_START_THE_BOT_MSG
+    )
+    assert _current_peer_id is not None, _translated_print(
+        "Сначала напиши боту что-то (используя input()), чтоб он знал, куда "
+        "отвечать",
+        "Provide some input to make the bot know where to send this message"
+    )
     if values:
         if sep is None:
             sep = " "
@@ -101,7 +114,10 @@ def print_(*values: Any, sep: Optional[str] = None) -> None:
 
 
 def input_(__prompt: Optional[str] = None, /) -> str:
-    assert _vk_client is not None, _YOU_NEED_TO_START_THE_BOT_MSG
+    global _current_peer_id
+    assert _vk_client is not None, _translated_print(
+        *_YOU_NEED_TO_START_THE_BOT_MSG
+    )
     _translated_print(
         "Ожидаю пользовательского ввода", "Waiting for user's input"
     )
@@ -109,8 +125,13 @@ def input_(__prompt: Optional[str] = None, /) -> str:
         print_(__prompt)
     for event in _listen_for_messages():
         if (
-            _get_from_id_from_message(event) == _current_user_id
-            and _get_peer_id_from_message(event) == _current_peer_id
+            not _listen_only_first_user
+            or (
+                _get_from_id_from_message(event) == _current_user_id
+                and _get_peer_id_from_message(event) == _current_peer_id
+            )
         ):
             _translated_print("Ввод получен", "Input received")
+            if not _listen_only_first_user:
+                _current_peer_id = _get_peer_id_from_message(event)
             return _get_text_from_message(event)
