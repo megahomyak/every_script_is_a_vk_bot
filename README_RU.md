@@ -57,3 +57,17 @@
 ### Еще ты можешь указывать язык сообщений в консоли:
 
     start("твой-вк-токен-от-группы", language="eng")  # Или language="ru"
+
+### Пример:
+
+    from every_script_is_vk_a_bot import start, print, input
+
+    start(
+        "твой-вк-токен-от-группы",
+        console_messages_enabled=False, listen_only_first_user=False
+    )
+    
+    while True:
+        msg = input()
+        if msg == "привет":
+            print("Здравствуй!")

@@ -57,3 +57,18 @@ This library can turn your code into the VK bot.
 ### You can also specify the language of messages in the console:
 
     start("your-group-vk-token", language="ru")  # Or language="eng"
+
+### Example:
+
+    from every_script_is_vk_a_bot import start, print, input
+
+    start(
+        "your-group-vk-token",
+        console_messages_enabled=False, listen_only_first_user=False
+    )
+    
+    while True:
+        msg = input()
+        if msg == "hi":
+            print("Hello!")
+
