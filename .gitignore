@@ -4,3 +4,4 @@ every_script_is_a_vk_bot.iml
 setup.py
 dist
 MANIFEST
+every_script_is_a_vk_bot.egg-info
