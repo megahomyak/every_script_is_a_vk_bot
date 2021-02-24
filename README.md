@@ -3,7 +3,7 @@
 # Every script is a VK bot
 
 VK bots is a python beginners' worst disease, but I'm moving it to the next level!
-This library can turn your code into the VK bot.
+This library can turn your code into a VK bot.
 
 ## Usage:
 
