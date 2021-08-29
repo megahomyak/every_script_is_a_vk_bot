@@ -60,7 +60,7 @@
 
 ### Пример:
 
-    from every_script_is_vk_a_bot import start, print, input
+    from every_script_is_a_vk_bot import start, print, input
 
     start(
         "твой-вк-токен-от-группы",
@@ -71,3 +71,12 @@
         msg = input()
         if msg == "привет":
             print("Здравствуй!")
+
+### А еще ты можешь смотреть айди беседы, пользователя или информацию о событии
+
+* Айди беседы лежит в `current_peer_id`,
+* Айди пользователя лежит в `current_user_id`,
+* Информация о событии лежит в `event`
+
+
+    from every_script_is_a_vk_bot import current_peer_id, current_user_id, event

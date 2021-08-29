@@ -8,12 +8,15 @@ _YOU_NEED_TO_START_THE_BOT_MSG = (
 )
 
 _vk_client: Optional[saya.Vk] = None
-_current_user_id = None
-_current_peer_id = None
+current_user_id: Optional[int] = None
+current_peer_id: Optional[int] = None
 _is_user = None
 _console_messages_enabled: bool = True
 _preferred_language_is_russian = None
 _listen_only_first_user = True
+
+
+event: Optional[dict] = None
 
 
 def _translated_print(ru_text: str, eng_text: str) -> None:
@@ -25,25 +28,27 @@ def _translated_print(ru_text: str, eng_text: str) -> None:
 
 
 def _listen_for_messages() -> Generator[dict, Any, None]:
-    for event in _vk_client.longpoll.listen(True):  # Yield dict instead of list
-        if event["type"] == "message_new":
-            yield event
+    global event
+    for event_ in _vk_client.longpoll.listen(True):  # Dicts instead of lists
+        if event_["type"] == "message_new":
+            event = event_
+            yield event_
 
 
-def _get_text_from_message(event: dict) -> str:
-    return event["text"] if _is_user else event["object"]["message"]["text"]
+def _get_text_from_message(event_: dict) -> str:
+    return event_["text"] if _is_user else event_["object"]["message"]["text"]
 
 
-def _get_peer_id_from_message(event: dict) -> str:
+def _get_peer_id_from_message(event_: dict) -> str:
     return (
-        event["peer_id"]
-    ) if _is_user else event["object"]["message"]["peer_id"]
+        event_["peer_id"]
+    ) if _is_user else event_["object"]["message"]["peer_id"]
 
 
-def _get_from_id_from_message(event: dict) -> str:
+def _get_from_id_from_message(event_: dict) -> str:
     return (
-        event["object"]["from"]
-    ) if _is_user else event["object"]["message"]["from_id"]
+        event_["object"]["from"]
+    ) if _is_user else event_["object"]["message"]["from_id"]
 
 
 def start(
@@ -53,7 +58,7 @@ def start(
         console_messages_enabled: bool = True,
         language: Optional[str] = None,
         listen_only_first_user: bool = True) -> None:
-    global _vk_client, _is_user, _current_user_id, _current_peer_id
+    global _vk_client, _is_user, current_user_id, current_peer_id
     global _console_messages_enabled, _preferred_language_is_russian
     global _listen_only_first_user
     if language is not None:
@@ -81,16 +86,16 @@ def start(
         _translated_print(
             'Ожидаю сообщения "/старт"', 'Waiting for the "/start" message'
         )
-        for event in _listen_for_messages():
-            text = _get_text_from_message(event)
+        for event_ in _listen_for_messages():
+            text = _get_text_from_message(event_)
             if text.lower() in ("/старт", "/start"):
                 _translated_print(
                     'Сообщение "/старт" получено, продолжаю выполнение скрипта',
                     'The message "/start" was received, continuing script '
                     'execution'
                 )
-                _current_user_id = _get_from_id_from_message(event)
-                _current_peer_id = _get_peer_id_from_message(event)
+                current_user_id = _get_from_id_from_message(event_)
+                current_peer_id = _get_peer_id_from_message(event_)
                 return
 
 
@@ -98,7 +103,7 @@ def print_(*values: Any, sep: Optional[str] = None) -> None:
     assert _vk_client is not None, _translated_print(
         *_YOU_NEED_TO_START_THE_BOT_MSG
     )
-    assert _current_peer_id is not None, _translated_print(
+    assert current_peer_id is not None, _translated_print(
         "Сначала напиши боту что-то (используя input()), чтоб он знал, куда "
         "отвечать",
         "Provide some input to make the bot know where to send this message"
@@ -108,13 +113,13 @@ def print_(*values: Any, sep: Optional[str] = None) -> None:
             sep = " "
         message = sep.join(map(str, values))
         _vk_client.messages.send(
-            message=message, peer_id=_current_peer_id,
+            message=message, peer_id=current_peer_id,
             random_id=random.randint(0, 1_000_000)
         )
 
 
 def input_(__prompt: Optional[str] = None, /) -> str:
-    global _current_peer_id
+    global current_peer_id
     assert _vk_client is not None, _translated_print(
         *_YOU_NEED_TO_START_THE_BOT_MSG
     )
@@ -123,15 +128,15 @@ def input_(__prompt: Optional[str] = None, /) -> str:
     )
     if __prompt is not None:
         print_(__prompt)
-    for event in _listen_for_messages():
+    for event_ in _listen_for_messages():
         if (
             not _listen_only_first_user
             or (
-                _get_from_id_from_message(event) == _current_user_id
-                and _get_peer_id_from_message(event) == _current_peer_id
+                _get_from_id_from_message(event_) == current_user_id
+                and _get_peer_id_from_message(event_) == current_peer_id
             )
         ):
             _translated_print("Ввод получен", "Input received")
             if not _listen_only_first_user:
-                _current_peer_id = _get_peer_id_from_message(event)
-            return _get_text_from_message(event)
+                current_peer_id = _get_peer_id_from_message(event_)
+            return _get_text_from_message(event_)

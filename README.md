@@ -60,7 +60,7 @@ This library can turn your code into the VK bot.
 
 ### Example:
 
-    from every_script_is_vk_a_bot import start, print, input
+    from every_script_is_a_vk_bot import start, print, input
 
     start(
         "your-group-vk-token",
@@ -72,3 +72,11 @@ This library can turn your code into the VK bot.
         if msg == "hi":
             print("Hello!")
 
+### Also, you can lookup current peer id, current user id or event info
+
+* Peer ID in `current_peer_id`,
+* User ID in `current_user_id`,
+* Event info in `event`
+
+
+    from every_script_is_a_vk_bot import current_peer_id, current_user_id, event
